@@ -1,0 +1,150 @@
+<div class="wrap">
+
+  <div class="eyebrow">Ledger de siembra · reroll</div>
+  <h1>¿Qué tan buena<br><em>salió</em> cada stat?</h1>
+  <p class="sub">
+    Elige tu semilla, su nivel de mejora y hasta 3 mutaciones, y escribe el valor final que te salió
+    tras rerrolear en cada stat. El sello de cada stat ya descuenta lo que aporta el nivel y las
+    mutaciones — solo mide qué tan bueno fue tu roll real:
+    E · D · C · B · A · S · SS · SSS · Z.
+  </p>
+
+  <div class="packet">
+    <div class="packet-row">
+      <div>
+        <span class="packet-title">{{ seed.name }}</span>
+        <span class="rarity-tag" [style.color]="rarityColor(seed.rarity)" [style.borderColor]="rarityColor(seed.rarity)">
+          {{ seed.rarity || '—' }}
+        </span>
+      </div>
+
+      <div class="selects">
+        <select class="seed-select" [ngModel]="currentIdx" (ngModelChange)="onSeedChange($event)">
+          <option
+            *ngFor="let s of seeds; let i = index"
+            [ngValue]="i"
+            [style.color]="rarityColor(s.rarity)">
+            {{ s.name }} — {{ s.rarity }}
+          </option>
+        </select>
+
+        <select class="seed-select" [ngModel]="level" (ngModelChange)="onLevelChange($event)">
+          <option *ngFor="let lvl of levels" [ngValue]="lvl">Nivel {{ lvl }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-item"><div class="k">Costo</div><div class="v">{{ fmt(seed.cost) }}</div></div>
+      <div class="meta-item"><div class="k">Chance</div><div class="v">1 / {{ fmt(seed.chance) }}</div></div>
+      <div class="meta-item"><div class="k">Grow Time</div><div class="v">{{ seed.growTime }}s</div></div>
+      <div class="meta-item"><div class="k">Agua</div><div class="v">{{ seed.water ?? '—' }}</div></div>
+    </div>
+
+    <div class="passive-row" *ngIf="seed.passive">
+      <span class="passive-label">Pasiva</span>
+      <span class="passive-text">{{ seed.passive }}</span>
+    </div>
+
+    <!-- Slots de mutación: hasta 3, cada uno opcional -->
+    <div class="mutation-slots">
+      <div class="mutation-slot" *ngFor="let slot of mutationSlots">
+        <span class="slot-label">Mutación {{ slot + 1 }}</span>
+        <select
+          class="seed-select"
+          [ngModel]="selectedMutationKeys[slot]"
+          (ngModelChange)="onMutationSlotChange(slot, $event)">
+          <option [ngValue]="null">Sin mutación</option>
+          <option *ngFor="let key of availableMutationsFor(slot)" [ngValue]="key">
+            {{ mutations[key].name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Banner con el beneficio de cada mutación activa -->
+    <div class="mutation-info" *ngIf="selectedMutations.length > 0">
+      <div class="mutation-info-row" *ngFor="let mut of selectedMutations">
+        <span class="mut-badge" [style.background]="mut.color">{{ mut.name }}</span>
+        <span class="mut-desc">
+          Chance x{{ mut.chanceMultiply }} ·
+          <ng-container *ngFor="let st of mut.stats | keyvalue; let last = last">
+            {{ st.value.type === 'PercentReduce' ? '-' : '+' }}{{ st.value.value * 100 }}% {{ statLabels[st.key] || st.key }}{{ last ? '' : ',' }}
+          </ng-container>
+        </span>
+      </div>
+      <div class="mutation-total" *ngIf="selectedMutations.length > 1">
+        Chance combinado: x{{ totalChanceMultiplier | number:'1.0-2' }}
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head">
+      <div>Stat</div><div>Rango rolleable</div><div>Tu valor</div><div>Roll</div><div>Sello</div>
+    </div>
+
+    <div class="stat-row" *ngFor="let key of statKeys">
+      <div class="stat-name">
+        {{ statLabels[key] || key }}
+        <span class="lib" *ngIf="seed.rolled[key].lowerIsBetter">menor = mejor</span>
+      </div>
+
+      <div class="stat-range">{{ rangeLabel(key) }}</div>
+
+      <input
+        class="stat-input"
+        type="number"
+        step="any"
+        [placeholder]="effectiveBase(key) | number:'1.1-2'"
+        [ngModel]="values[key]"
+        (ngModelChange)="values[key] = $event; onInput(key)">
+
+      <div>
+        <div class="bar-wrap">
+          <div class="bar-fill" [style.width]="barWidth(key)"></div>
+        </div>
+        <span class="bar-pct">
+          {{ results[key] ? (results[key]?.pct | number:'1.1-1') + '% del rango' : 'sin datos' }}
+        </span>
+      </div>
+
+      <div class="stamp-cell">
+        <div
+          class="mini-stamp"
+          *ngIf="results[key]"
+          [class.holo]="results[key]?.tier?.holo"
+          [style.color]="results[key]?.tier?.holo ? null : results[key]?.tier?.color">
+          {{ results[key]?.tier?.id }}
+        </div>
+        <div class="mini-stamp empty" *ngIf="!results[key]">–</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="calc-btn" (click)="sealAll()">Sellar todo</button>
+    <button class="ghost-btn" (click)="clearAll()">Limpiar valores</button>
+  </div>
+
+  <div class="final-result" *ngIf="overallInfo">
+    <div
+      class="mini-stamp final-stamp"
+      [class.holo]="overallInfo.tier.holo"
+      [style.color]="overallInfo.tier.holo ? null : overallInfo.tier.color">
+      {{ overallInfo.tier.id }}
+    </div>
+    <div class="final-copy">
+      <div class="final-label">Calificación final</div>
+      <p class="final-reason">{{ finalReasonText }}</p>
+      <p class="final-verdict" *ngIf="verdict">{{ verdict }}</p>
+    </div>
+  </div>
+
+  <div class="dps-row" *ngIf="overallInfo">
+    <span class="dps-label">DPS estimado</span>
+    <span class="dps-value" *ngIf="dps !== null">{{ dps | number:'1.1-1' }}</span>
+    <span class="dps-value muted" *ngIf="dps === null">escribe Daño y Tiempo de recarga</span>
+  </div>
+
+</div>
