@@ -68,5 +68,14 @@ export const MUTATIONS: { [key: string]: Mutation } = {
       WalkSpeed: { value: 0.1, type: 'Percent' },
       Cooldown: { value: 0.1, type: 'PercentReduce' }
     }
-  }
+  },
+  Bloodlit: {
+    name: 'Bloodlit',
+    color: '#b30000',
+    chanceMultiply: 1, // Puedes ajustar este multiplicador según la probabilidad del juego
+    stats: {
+      Damage: { value: 0.15, type: 'Percent' },
+      UnitHealth: { value: 0.1, type: 'Percent' }
+    }
+  },
 };

@@ -35,8 +35,12 @@
 
 * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-.wrap { max-width: 880px; margin: 0 auto; padding: 48px 20px 80px; }
-
+.wrap {
+  max-width: 1200px; /* Aumenta el límite en PC de 880px a 1200px */
+  width: 92%;        /* Se adaptará fluidamente a monitores medianos y laptops */
+  margin: 0 auto;    /* Mantiene todo perfectamente centrado en la pantalla */
+  padding: 48px 20px 80px;
+}
 /* ---- Encabezado ---- */
 .eyebrow {
   font-size: 11px;
