@@ -406,13 +406,51 @@ button.ghost-btn:hover { border-color: var(--blue-light); }
 }
 
 @media (max-width: 600px) {
-  .ledger-head { display: none; }
-  .stat-row { grid-template-columns: 1fr; gap: 6px; padding: 16px 18px; }
-  .stat-range { order: 2; }
-  input.stat-input { order: 3; }
-  .bar-wrap { order: 4; }
-  .bar-pct { order: 5; }
-  .stamp-cell { order: 6; justify-content: flex-start; margin-top: 4px; }
-  .selects { width: 100%; }
-  select.seed-select { flex: 1; }
+  .wrap {
+    padding: 20px 12px 40px; /* Reducimos espacios superiores/inferiores */
+  }
+
+  .ledger-head { 
+    display: none; 
+  }
+
+  .stat-row { 
+    /* Mantenemos distribución compacta en 2 columnas principales */
+    grid-template-columns: 1fr auto; 
+    gap: 8px 12px; 
+    padding: 12px 10px; 
+  }
+
+  .stat-name { 
+    grid-column: 1 / 2;
+    font-size: 13.5px;
+  }
+
+  .stamp-cell { 
+    grid-column: 2 / 3;
+    grid-row: 1 / 3; /* El sello queda a la derecha abarcando 2 filas */
+    align-self: center;
+  }
+
+  .stat-range { 
+    grid-column: 1 / 2;
+    font-size: 11px;
+  }
+
+  input.stat-input { 
+    grid-column: 1 / 2;
+    padding: 6px 8px; /* Input más compacto */
+    font-size: 13px;
+  }
+
+  .bar-wrap { 
+    grid-column: 1 / 2;
+    height: 6px; /* Barra más delgada */
+  }
+
+  .bar-pct { 
+    display: inline-block;
+    font-size: 10px;
+    margin-top: 2px;
+  }
 }
