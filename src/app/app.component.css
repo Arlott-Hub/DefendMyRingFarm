@@ -458,3 +458,96 @@ button.ghost-btn:hover { border-color: var(--blue-light); }
     margin-top: 2px;
   }
 }
+
+/* Tarjeta de exportación fuera de la vista del usuario */
+.export-card {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 380px;
+  background: #0b1424;
+  border: 1px solid rgba(120, 170, 255, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(120, 170, 255, 0.2);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: #7db8ff;
+}
+
+.card-mutations {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.card-mut-tag {
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  border-bottom: 1px dashed rgba(120, 170, 255, 0.1);
+  padding-bottom: 4px;
+}
+
+.card-stat-label { color: #93a8cf; }
+.card-stat-val { font-weight: 600; }
+.card-stat-stamp { font-weight: 700; font-size: 14px; }
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(120, 170, 255, 0.2);
+}
+
+.card-footer small { color: #93a8cf; font-size: 10px; text-transform: uppercase; }
+.card-grade { font-size: 22px; font-weight: 800; }
+.card-dps { font-size: 18px; font-weight: 700; color: #7db8ff; }
+
+.export-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 380px;
+  background-color: #0b1424; /* Color de fondo sólido explícito */
+  border: 1px solid rgba(120, 170, 255, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  z-index: -9999; /* Lo oculta detrás de la página pero permite que html2canvas lo lea */
+  pointer-events: none;
+}

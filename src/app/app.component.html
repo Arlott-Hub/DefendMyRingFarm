@@ -125,6 +125,9 @@
   <div class="actions">
     <button class="calc-btn" (click)="sealAll()">Sellar todo</button>
     <button class="ghost-btn" (click)="clearAll()">Limpiar valores</button>
+    <button class="ghost-btn" (click)="copyImage()">📋 Copiar Imagen</button>
+    <button class="ghost-btn" (click)="shareImage()">📲 Compartir</button>
+    <button class="ghost-btn" (click)="exportAsImage()">💾 Guardar Ficha</button>
   </div>
 
   <div class="final-result" *ngIf="overallInfo">
@@ -147,4 +150,39 @@
     <span class="dps-value muted" *ngIf="dps === null">escribe Daño y Tiempo de recarga</span>
   </div>
 
+</div>
+
+<!-- Tarjeta oculta para la generación de imagen (html2canvas) -->
+<div id="export-card" class="export-card">
+  <div class="card-header">
+    <div class="card-title">{{ seed.name }}</div>
+    <div class="card-subtitle">Nivel {{ level }} · {{ seed.rarity }}</div>
+  </div>
+
+  <div class="card-mutations" *ngIf="selectedMutations.length > 0">
+    <span *ngFor="let m of selectedMutations" class="card-mut-tag" [style.background]="m.color">
+      {{ m.name }}
+    </span>
+  </div>
+
+  <div class="card-stats">
+    <div class="card-stat-row" *ngFor="let key of statKeys">
+      <span class="card-stat-label">{{ statLabels[key] || key }}</span>
+      <span class="card-stat-val">{{ values[key] ?? '—' }}</span>
+      <span class="card-stat-stamp" [style.color]="results[key]?.tier?.color || '#93a8cf'">
+        {{ results[key]?.tier?.id || '—' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="card-footer" *ngIf="overallInfo">
+    <div>
+      <small>Rango general</small>
+      <div class="card-grade" [style.color]="overallInfo.tier.color">{{ overallInfo.tier.id }}</div>
+    </div>
+    <div *ngIf="dps !== null" style="text-align: right;">
+      <small>DPS Estimado</small>
+      <div class="card-dps">{{ dps | number:'1.1-1' }}</div>
+    </div>
+  </div>
 </div>

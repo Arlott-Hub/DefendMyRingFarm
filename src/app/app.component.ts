@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import html2canvas from 'html2canvas';
 import { Seed, STAT_LABELS, SEEDS, MIN_LEVEL, MAX_LEVEL, RARITY_COLORS, STAT_WEIGHTS } from './plants/SeedsData';
 import { MUTATIONS, Mutation } from './plants/MutationData';
 
@@ -132,12 +133,6 @@ export class AppComponent {
   }
 
   // stat base ya ajustado según nivel de mejora + mutaciones activas.
-  // Nivel 1 = planta sin mejoras. Cada nivel arriba de 1 suma "value" del
-  // stat base (no compuesto). Las mutaciones que compartan la misma stat
-  // SUMAN su % entre sí y se aplican una sola vez (no se componen unas con
-  // otras) — esto es clave: al dividir el valor final del usuario entre esta
-  // base ya "inflada" por nivel + mutación, el % de roll que se calcula
-  // corresponde solo al roll real, sin que la mutación infle la nota.
   effectiveBase(key: string): number {
     const base = this.seed.baseStats[key];
     const upg = this.seed.upgrade?.stats[key];
@@ -208,8 +203,89 @@ export class AppComponent {
     this.resetValues();
   }
 
-  // mensaje final en texto: qué stats salieron fuertes y cuáles flojas.
-  // "fuerte" = S/SS/SSS/Z, "floja" = E/D/C. B/A quedan como "normal".
+  // --- EXPORTACIÓN DE IMAGEN ---
+
+  // 1. Descargar la imagen
+  exportAsImage(): void {
+    const node = document.getElementById('export-card');
+    if (!node) return;
+
+    html2canvas(node, {
+      backgroundColor: '#0b1424',
+      scale: 2,
+      logging: false,
+      useCORS: true
+    }).then((canvas: HTMLCanvasElement) => {
+      const link = document.createElement('a');
+      link.download = `ficha-${this.seed.name.toLowerCase()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch((err: unknown) => console.error('Error al descargar la imagen:', err));
+  }
+
+  // 2. Copiar la imagen al portapapeles
+  copyImage(): void {
+    const node = document.getElementById('export-card');
+    if (!node) return;
+
+    html2canvas(node, {
+      backgroundColor: '#0b1424',
+      scale: 2,
+      logging: false,
+      useCORS: true
+    }).then((canvas: HTMLCanvasElement) => {
+      canvas.toBlob((blob: Blob | null) => {
+        if (!blob) return;
+
+        const item = new ClipboardItem({ 'image/png': blob });
+        navigator.clipboard.write([item])
+          .then(() => {
+            alert('¡Imagen copiada al portapapeles! Ya puedes pegarla en Discord o WhatsApp.');
+          })
+          .catch((err: unknown) => {
+            console.error('Error al copiar la imagen:', err);
+            alert('Tu navegador no permitió copiar la imagen directamente.');
+          });
+      }, 'image/png');
+    }).catch((err: unknown) => console.error('Error al generar la imagen:', err));
+  }
+
+  // 3. Compartir imagen mediante el menú nativo (WhatsApp, Discord, etc.)
+  async shareImage(): Promise<void> {
+    const node = document.getElementById('export-card');
+    if (!node) return;
+
+    try {
+      const canvas: HTMLCanvasElement = await html2canvas(node, {
+        backgroundColor: '#0b1424',
+        scale: 2,
+        logging: false,
+        useCORS: true
+      });
+
+      canvas.toBlob(async (blob: Blob | null) => {
+        if (!blob) return;
+
+        const file = new File([blob], `ficha-${this.seed.name.toLowerCase()}.png`, { type: 'image/png' });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `Ficha de ${this.seed.name}`,
+            text: `¡Mira las estadísticas de mi ${this.seed.name} (Nivel ${this.level})!`
+          });
+        } else {
+          // Si el navegador no soporta compartir directamente, copia la imagen
+          this.copyImage();
+        }
+      }, 'image/png');
+    } catch (err: unknown) {
+      console.error('Error al compartir la imagen:', err);
+    }
+  }
+
+  // --- MÉTRICAS FINALES Y VERDICTO ---
+
   get verdict(): string {
     const loaded = this.statKeys
       .map(k => ({ key: k, r: this.results[k] }))
@@ -237,9 +313,6 @@ export class AppComponent {
     return msg;
   }
 
-  // calificación PRINCIPAL: promedio ponderado de todas las stats, no la peor.
-  // Daño, Tiempo de recarga y Alcance pesan más (definen qué tan letal es la
-  // unidad); Vida pesa un poco más que Velocidad; Velocidad es lo que menos pesa.
   get overallInfo(): { tier: Tier; pct: number; loadedCount: number; totalCount: number } | null {
     const totalCount = this.statKeys.length;
     const loaded = this.statKeys
@@ -272,8 +345,6 @@ export class AppComponent {
     return msg;
   }
 
-  // DPS estimado con los valores reales que escribiste (ya con nivel + mutación
-  // + roll incluidos, porque son los valores finales de tu planta en el juego).
   get dps(): number | null {
     const dmg = this.values['Damage'];
     const cd = this.values['Cooldown'];
